@@ -90,6 +90,27 @@ class ErrorStats:
 def sanitize_filename(name):
     return re.sub(r'[^A-Za-z0-9_]', '_', name)
 
+def pseudocode_to_lines(pseudo) -> list[str]:
+    """Normalize IDA Domain pseudocode return values to plain text lines."""
+    if not pseudo:
+        return []
+    if isinstance(pseudo, str):
+        return pseudo.splitlines()
+    if isinstance(pseudo, (list, tuple)):
+        return [str(line) for line in pseudo]
+
+    to_text = getattr(pseudo, "to_text", None)
+    if callable(to_text):
+        text = to_text()
+        if isinstance(text, str):
+            return text.splitlines()
+        try:
+            return [str(line) for line in text]
+        except TypeError:
+            return str(text).splitlines()
+
+    return str(pseudo).splitlines()
+
 def analyze_binary(db_path: str, version: str, debug: bool = False, error_stats: ErrorStats = None):
     """Analyze binary and yield (function_name, compressed_pseudocode) for the given version"""
     
@@ -172,7 +193,8 @@ def analyze_binary(db_path: str, version: str, debug: bool = False, error_stats:
                     # Get pseudocode
                     pseudo = None
                     try:
-                        pseudo = db.functions.get_pseudocode(func)
+                        pseudo_obj = db.functions.get_pseudocode(func)
+                        pseudo = pseudocode_to_lines(pseudo_obj)
                         if not pseudo:
                             if debug:
                                 log.debug(f"No pseudocode for function: {name}")

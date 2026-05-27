@@ -7,7 +7,7 @@ name = "diffrays"
 version = "2.0"
 description = "Binary Diff Analysis Tool - Decompile, Compare, and Visualize Binary Changes"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "Nikhil John Thomas", email = "nikhiljohn2104@gmail.com"},
@@ -15,6 +15,7 @@ authors = [
 ]
 
 dependencies = [
+    "colorama",
     "flask",
     "tqdm",
     "ida-domain",

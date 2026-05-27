@@ -25,6 +25,28 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def pseudocode_to_lines(pseudo) -> List[str]:
+    """Normalize IDA Domain pseudocode return values to plain text lines."""
+    if not pseudo:
+        return []
+    if isinstance(pseudo, str):
+        return pseudo.splitlines()
+    if isinstance(pseudo, (list, tuple)):
+        return [str(line) for line in pseudo]
+
+    to_text = getattr(pseudo, "to_text", None)
+    if callable(to_text):
+        text = to_text()
+        if isinstance(text, str):
+            return text.splitlines()
+        try:
+            return [str(line) for line in text]
+        except TypeError:
+            return str(text).splitlines()
+
+    return str(pseudo).splitlines()
+
+
 @dataclass
 class FunctionFeatures:
     """Comprehensive function features for matching heuristics."""
@@ -412,7 +434,7 @@ def extract_function_features(db, func, binary_base: int = 0) -> FunctionFeature
         
         # Extract pseudocode
         try:
-            pseudocode_lines = db.functions.get_pseudocode(func)
+            pseudocode_lines = pseudocode_to_lines(db.functions.get_pseudocode(func))
             pseudocode = "\n".join(pseudocode_lines) if pseudocode_lines else ""
             clean_pseudocode = clean_name(pseudocode)
             pseudocode_line_count = len(pseudocode_lines) if pseudocode_lines else 0
@@ -490,4 +512,3 @@ def extract_function_features(db, func, binary_base: int = 0) -> FunctionFeature
             address=func.start_ea,
             size=func.end_ea - func.start_ea
         )
-
